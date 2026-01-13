@@ -1,4 +1,3 @@
-// Package main provides the entry point for the AWSL interpreter.
 package main
 
 import (
@@ -7,7 +6,7 @@ import (
 	"os"
 
 	"github.com/boattime/awsl/internal/lexer"
-	"github.com/boattime/awsl/internal/token"
+	"github.com/boattime/awsl/internal/parser"
 )
 
 // Version information (set via ldflags during build).
@@ -42,49 +41,23 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
-	// Lex the source file
-	if err := lexSource(string(source), stdout); err != nil {
-		fmt.Fprintf(stderr, "error: %v\n", err)
+	// Lex and parse the source file
+	l := lexer.New(string(source))
+	p := parser.New(l)
+	program := p.ParseProgram()
+
+	// Check for parse errors
+	if p.HasErrors() {
+		for _, parseErr := range p.Errors() {
+			fmt.Fprintln(stderr, parseErr)
+		}
 		return 1
 	}
 
+	// Output the parsed AST (placeholder until interpreter is ready)
+	if len(program.Statements) > 0 {
+		fmt.Fprintln(stdout, program.String())
+	}
+
 	return 0
-}
-
-// lexSource tokenizes the input source and writes the tokens to the writer.
-// Each token is output on its own line with position information.
-func lexSource(source string, w io.Writer) error {
-	l := lexer.New(source)
-
-	for {
-		tok := l.NextToken()
-
-		// Format: LINE:COLUMN\tTYPE\tLITERAL
-		fmt.Fprintf(w, "%d:%d\t%s\t%s\n", tok.Line, tok.Column, tok.Type, formatLiteral(tok))
-
-		if tok.Type == token.EOF {
-			break
-		}
-
-		if tok.Type == token.ILLEGAL {
-			return fmt.Errorf("illegal token %q at line %d, column %d", tok.Literal, tok.Line, tok.Column)
-		}
-	}
-
-	return nil
-}
-
-// formatLiteral returns a display-friendly version of the token literal.
-// String literals are shown with quotes, empty literals show as <empty>.
-func formatLiteral(tok token.Token) string {
-	if tok.Type == token.STRING {
-		return fmt.Sprintf("%q", tok.Literal)
-	}
-	if tok.Type == token.EOF {
-		return "<eof>"
-	}
-	if tok.Literal == "" {
-		return "<empty>"
-	}
-	return tok.Literal
 }
