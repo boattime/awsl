@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/boattime/awsl/internal/eval"
 	"github.com/boattime/awsl/internal/lexer"
 	"github.com/boattime/awsl/internal/parser"
 )
@@ -54,9 +55,15 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
-	// Output the parsed AST (placeholder until interpreter is ready)
-	if len(program.Statements) > 0 {
-		fmt.Fprintln(stdout, program.String())
+	result := eval.Eval(program)
+
+	if result.Type() == eval.ERROR_OBJ {
+		fmt.Fprintln(stderr, result.Inspect())
+		return 1
+	}
+
+	if result != eval.NULL {
+		fmt.Fprintln(stdout, result.Inspect())
 	}
 
 	return 0
