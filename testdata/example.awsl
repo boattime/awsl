@@ -1,0 +1,28 @@
+// Configure AWS context
+profile "production";
+region "us-west-2";
+
+// List all Python Lambda functions
+functions = lambda.list(runtime: "python3.12");
+
+// Print summary
+print("Found", len(functions), "functions");
+
+// Query DynamoDB
+users_table = dynamo.table("Users");
+
+active_users = users_table.query(
+    pk: "ORG#acme",
+    sk_begins: "USER#",
+    filter: {active: true}
+);
+
+// Output as table
+active_users | format table;
+
+// Conditional logic
+if (len(active_users) > 0) {
+    print("Found users");
+} else {
+    print("No users found");
+}

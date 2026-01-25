@@ -1,0 +1,3 @@
+--- stderr ---
+error at line 2, column 1: unknown node type: *ast.ContextStatement
+--- exit code: 1 ---

@@ -59,6 +59,10 @@ test-coverage: ## Run tests with coverage report
 	$(GO) tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report: coverage.html"
 
+.PHONY: test-update
+test-update: ## Update golden tests
+	$(GO) test ./cmd/awsl -update
+
 .PHONY: bench
 bench: ## Run benchmarks
 	$(GO) test -bench=. -benchmem ./...

@@ -1,0 +1,6 @@
+user = {
+    pk: "ORG#acme",
+    sk: "USER#123",
+    name: "Alice",
+    active: true
+};
