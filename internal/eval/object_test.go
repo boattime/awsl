@@ -228,3 +228,16 @@ func TestObjectInterface(t *testing.T) {
 		_ = obj.Inspect()
 	}
 }
+
+func TestBuiltinObject(t *testing.T) {
+	fn := func(args ...Object) Object { return NULL }
+	obj := &Builtin{Name: "test", Fn: fn}
+
+	if obj.Type() != BUILTIN_OBJ {
+		t.Errorf("Builtin.Type() = %q, want %q", obj.Type(), BUILTIN_OBJ)
+	}
+
+	if obj.Inspect() != "builtin:test" {
+		t.Errorf("Builtin.Inspect() = %q, want %q", obj.Inspect(), "builtin:test")
+	}
+}

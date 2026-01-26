@@ -15,6 +15,7 @@ const (
 	BOOLEAN_OBJ = "BOOLEAN"
 	NULL_OBJ    = "NULL"
 	ERROR_OBJ   = "ERROR"
+	BUILTIN_OBJ = "BUILTIN"
 )
 
 // Object is the interface that all runtime values implement.
@@ -103,3 +104,18 @@ func (e *Error) Type() ObjectType { return ERROR_OBJ }
 func (e *Error) Inspect() string {
 	return fmt.Sprintf("error at line %d, column %d: %s", e.Line, e.Column, e.Message)
 }
+
+// BuiltinFunction is the signature for built-in functions.
+type BuiltinFunction func(args ...Object) Object
+
+// Builtin wraps a Go function as an AWSL callable object.
+type Builtin struct {
+	Name string
+	Fn   BuiltinFunction
+}
+
+// Type returns BUILTIN_OBJ.
+func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
+
+// Inspect returns the builtin function name.
+func (b *Builtin) Inspect() string { return "builtin:" + b.Name }

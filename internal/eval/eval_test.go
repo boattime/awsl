@@ -224,6 +224,58 @@ func TestBangOperatorWithInteger(t *testing.T) {
 	testBooleanObject(t, evaluated, false)
 }
 
+func TestCallExpressionBuiltin(t *testing.T) {
+	env := NewEnvironment()
+	env.Set("add", &Builtin{
+		Name: "add",
+		Fn: func(args ...Object) Object {
+			if len(args) != 2 {
+				return &Error{Message: "add requires 2 arguments"}
+			}
+			a, ok1 := args[0].(*Integer)
+			b, ok2 := args[1].(*Integer)
+			if !ok1 || !ok2 {
+				return &Error{Message: "add requires integers"}
+			}
+			return &Integer{Value: a.Value + b.Value}
+		},
+	})
+
+	l := lexer.New("add(2, 3);")
+	p := parser.New(l)
+	program := p.ParseProgram()
+	result := Eval(program, env)
+
+	testIntegerObject(t, result, 5)
+}
+
+func TestCallExpressionNotAFunction(t *testing.T) {
+	evaluated := testEval("x = 5; x();")
+	testErrorObject(t, evaluated, "not a function: INTEGER")
+}
+
+func TestCallExpressionUndefinedFunction(t *testing.T) {
+	evaluated := testEval("foo();")
+	testErrorObject(t, evaluated, "undefined variable: foo")
+}
+
+func TestCallExpressionArgumentError(t *testing.T) {
+	env := NewEnvironment()
+	env.Set("identity", &Builtin{
+		Name: "identity",
+		Fn: func(args ...Object) Object {
+			return args[0]
+		},
+	})
+
+	l := lexer.New("identity(x);")
+	p := parser.New(l)
+	program := p.ParseProgram()
+	result := Eval(program, env)
+
+	testErrorObject(t, result, "undefined variable: x")
+}
+
 func TestMinusPrefixOperator(t *testing.T) {
 	tests := []struct {
 		input    string

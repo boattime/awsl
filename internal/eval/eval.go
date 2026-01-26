@@ -35,6 +35,8 @@ func Eval(node ast.Node, env *Environment) Object {
 	// Expressions
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
+	case *ast.CallExpression:
+		return evalCallExpression(node, env)
 	case *ast.PrefixExpression:
 		return evalPrefixExpression(node, env)
 	case *ast.InfixExpression:
@@ -84,6 +86,46 @@ func evalIdentifier(node *ast.Identifier, env *Environment) Object {
 		return newError(pos.Line, pos.Column, "undefined variable: %s", node.Value)
 	}
 	return val
+}
+
+// evalCallExpression evaluates a function call.
+func evalCallExpression(node *ast.CallExpression, env *Environment) Object {
+	function := Eval(node.Function, env)
+	if isError(function) {
+		return function
+	}
+
+	args, err := evalArguments(node.Arguments, env)
+	if err != nil {
+		return err
+	}
+
+	return applyFunction(function, args, node.Pos())
+}
+
+// evalArguments evaluates a list of arguments left to right.
+func evalArguments(arguments []ast.Argument, env *Environment) ([]Object, *Error) {
+	result := make([]Object, len(arguments))
+
+	for i, arg := range arguments {
+		evaluated := Eval(arg.Value, env)
+		if isError(evaluated) {
+			return nil, evaluated.(*Error)
+		}
+		result[i] = evaluated
+	}
+
+	return result, nil
+}
+
+// applyFunction calls a function with the given arguments.
+func applyFunction(fn Object, args []Object, pos ast.Position) Object {
+	switch function := fn.(type) {
+	case *Builtin:
+		return function.Fn(args...)
+	default:
+		return newError(pos.Line, pos.Column, "not a function: %s", fn.Type())
+	}
 }
 
 // evalPrefixExpression evaluates prefix operators (! and -).
