@@ -55,7 +55,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
-	result := eval.Eval(program)
+	env := eval.NewEnvironment()
+	result := eval.Eval(program, env)
 
 	if result.Type() == eval.ERROR_OBJ {
 		fmt.Fprintln(stderr, result.Inspect())

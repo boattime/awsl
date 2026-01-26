@@ -11,12 +11,14 @@ import (
 
 // Eval evaluates an AST node and returns the resulting runtime value.
 // If evaluation fails, it returns an Error object.
-func Eval(node ast.Node) Object {
+func Eval(node ast.Node, env *Environment) Object {
 	switch node := node.(type) {
 	case *ast.Program:
-		return evalProgram(node)
+		return evalProgram(node, env)
 	case *ast.ExpressionStatement:
-		return Eval(node.Expression)
+		return Eval(node.Expression, env)
+	case *ast.AssignmentStatement:
+		return evalAssignment(node, env)
 
 	// Literals
 	case *ast.IntegerLiteral:
@@ -31,12 +33,14 @@ func Eval(node ast.Node) Object {
 		return NULL
 
 	// Expressions
+	case *ast.Identifier:
+		return evalIdentifier(node, env)
 	case *ast.PrefixExpression:
-		return evalPrefixExpression(node)
+		return evalPrefixExpression(node, env)
 	case *ast.InfixExpression:
-		return evalInfixExpression(node)
+		return evalInfixExpression(node, env)
 	case *ast.GroupedExpression:
-		return Eval(node.Expression)
+		return Eval(node.Expression, env)
 	}
 
 	pos := node.Pos()
@@ -45,11 +49,11 @@ func Eval(node ast.Node) Object {
 
 // evalProgram evaluates all statements in a program and returns
 // the result of the last statement.
-func evalProgram(program *ast.Program) Object {
+func evalProgram(program *ast.Program, env *Environment) Object {
 	var result Object = NULL
 
 	for _, stmt := range program.Statements {
-		result = Eval(stmt)
+		result = Eval(stmt, env)
 
 		// Stop evaluation if we hit an error
 		if isError(result) {
@@ -60,9 +64,31 @@ func evalProgram(program *ast.Program) Object {
 	return result
 }
 
+// evalAssignment evaluates an assignment statement and stores
+// the result in the environment.
+func evalAssignment(node *ast.AssignmentStatement, env *Environment) Object {
+	val := Eval(node.Value, env)
+	if isError(val) {
+		return val
+	}
+
+	env.Set(node.Name.Value, val)
+	return NULL
+}
+
+// evalIdentifier looks up a variable in the environment.
+func evalIdentifier(node *ast.Identifier, env *Environment) Object {
+	val, ok := env.Get(node.Value)
+	if !ok {
+		pos := node.Pos()
+		return newError(pos.Line, pos.Column, "undefined variable: %s", node.Value)
+	}
+	return val
+}
+
 // evalPrefixExpression evaluates prefix operators (! and -).
-func evalPrefixExpression(node *ast.PrefixExpression) Object {
-	right := Eval(node.Right)
+func evalPrefixExpression(node *ast.PrefixExpression, env *Environment) Object {
+	right := Eval(node.Right, env)
 	if isError(right) {
 		return right
 	}
@@ -107,13 +133,13 @@ func evalMinusPrefixOperator(right Object, pos ast.Position) Object {
 }
 
 // evalInfixExpression evaluates binary operators.
-func evalInfixExpression(node *ast.InfixExpression) Object {
-	left := Eval(node.Left)
+func evalInfixExpression(node *ast.InfixExpression, env *Environment) Object {
+	left := Eval(node.Left, env)
 	if isError(left) {
 		return left
 	}
 
-	right := Eval(node.Right)
+	right := Eval(node.Right, env)
 	if isError(right) {
 		return right
 	}

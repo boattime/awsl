@@ -11,8 +11,9 @@ import (
 func testEval(input string) Object {
 	l := lexer.New(input)
 	p := parser.New(l)
+	env := NewEnvironment()
 	program := p.ParseProgram()
-	return Eval(program)
+	return Eval(program, env)
 }
 
 // testIntegerObject checks that obj is an Integer with the expected value.
@@ -544,4 +545,90 @@ func TestNullSingletonUsed(t *testing.T) {
 func TestEmptyProgram(t *testing.T) {
 	evaluated := testEval("")
 	testNullObject(t, evaluated)
+}
+
+func TestAssignment(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"x = 5; x;", 5},
+		{"x = 5 * 5; x;", 25},
+		{"a = 5; b = a; b;", 5},
+		{"a = 5; b = a; c = a + b + 5; c;", 15},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testIntegerObject(t, evaluated, tt.expected)
+		})
+	}
+}
+
+func TestAssignmentReturnsNull(t *testing.T) {
+	evaluated := testEval("x = 42;")
+	testNullObject(t, evaluated)
+}
+
+func TestAssignmentOverwrite(t *testing.T) {
+	input := `
+		x = 10;
+		x = 20;
+		x;
+	`
+	evaluated := testEval(input)
+	testIntegerObject(t, evaluated, 20)
+}
+
+func TestAssignmentDifferentTypes(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected any
+	}{
+		{"integer", "x = 42; x;", int64(42)},
+		{"float", "x = 3.14; x;", float64(3.14)},
+		{"string", `x = "hello"; x;`, "hello"},
+		{"boolean", "x = true; x;", true},
+		{"null", "x = null; x;", nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			switch expected := tt.expected.(type) {
+			case int64:
+				testIntegerObject(t, evaluated, expected)
+			case float64:
+				testFloatObject(t, evaluated, expected)
+			case string:
+				testStringObject(t, evaluated, expected)
+			case bool:
+				testBooleanObject(t, evaluated, expected)
+			case nil:
+				testNullObject(t, evaluated)
+			}
+		})
+	}
+}
+
+func TestUndefinedVariable(t *testing.T) {
+	evaluated := testEval("foobar;")
+	testErrorObject(t, evaluated, "undefined variable: foobar")
+}
+
+func TestUndefinedVariableInExpression(t *testing.T) {
+	evaluated := testEval("x = 5; x + y;")
+	testErrorObject(t, evaluated, "undefined variable: y")
+}
+
+func TestAssignmentWithExpressionUsingVariable(t *testing.T) {
+	input := `
+		x = 10;
+		x = x + 5;
+		x;
+	`
+	evaluated := testEval(input)
+	testIntegerObject(t, evaluated, 15)
 }
