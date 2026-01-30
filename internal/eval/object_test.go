@@ -230,7 +230,7 @@ func TestObjectInterface(t *testing.T) {
 }
 
 func TestBuiltinObject(t *testing.T) {
-	fn := func(args ...Object) Object { return NULL }
+	fn := func(env *Environment, args ...Object) Object { return NULL }
 	obj := &Builtin{Name: "test", Fn: fn}
 
 	if obj.Type() != BUILTIN_OBJ {

@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"os"
 	"testing"
 
 	"github.com/boattime/awsl/internal/lexer"
@@ -11,7 +12,7 @@ import (
 func testEval(input string) Object {
 	l := lexer.New(input)
 	p := parser.New(l)
-	env := NewEnvironment()
+	env := NewEnvironment(os.Stdout)
 	program := p.ParseProgram()
 	return Eval(program, env)
 }
@@ -225,10 +226,10 @@ func TestBangOperatorWithInteger(t *testing.T) {
 }
 
 func TestCallExpressionBuiltin(t *testing.T) {
-	env := NewEnvironment()
+	env := NewEnvironment(os.Stdout)
 	env.Set("add", &Builtin{
 		Name: "add",
-		Fn: func(args ...Object) Object {
+		Fn: func(env *Environment, args ...Object) Object {
 			if len(args) != 2 {
 				return &Error{Message: "add requires 2 arguments"}
 			}
@@ -260,10 +261,10 @@ func TestCallExpressionUndefinedFunction(t *testing.T) {
 }
 
 func TestCallExpressionArgumentError(t *testing.T) {
-	env := NewEnvironment()
+	env := NewEnvironment(os.Stdout)
 	env.Set("identity", &Builtin{
 		Name: "identity",
-		Fn: func(args ...Object) Object {
+		Fn: func(env *Environment, args ...Object) Object {
 			return args[0]
 		},
 	})

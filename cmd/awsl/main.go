@@ -55,7 +55,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
-	env := eval.NewEnvironment()
+	env := eval.NewEnvironment(stdout)
 	eval.RegisterBuiltins(env)
 	result := eval.Eval(program, env)
 

@@ -20,13 +20,11 @@ func RegisterBuiltins(env *Environment) {
 
 // builtinPrint prints values to stdout separated by spaces.
 // Returns NULL.
-func builtinPrint(args ...Object) Object {
+func builtinPrint(env *Environment, args ...Object) Object {
 	values := make([]any, len(args))
 	for i, arg := range args {
 		values[i] = arg.Inspect()
 	}
-	// TODO: pass writer through environment for better testing
-	// main.go passes os.Stdout, tests pass bytes.Buffer
-	fmt.Println(values...)
+	fmt.Fprintln(env.Stdout(), values...)
 	return NULL
 }

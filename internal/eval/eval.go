@@ -100,7 +100,7 @@ func evalCallExpression(node *ast.CallExpression, env *Environment) Object {
 		return err
 	}
 
-	return applyFunction(function, args, node.Pos())
+	return applyFunction(env, function, args, node.Pos())
 }
 
 // evalArguments evaluates a list of arguments left to right.
@@ -119,10 +119,10 @@ func evalArguments(arguments []ast.Argument, env *Environment) ([]Object, *Error
 }
 
 // applyFunction calls a function with the given arguments.
-func applyFunction(fn Object, args []Object, pos ast.Position) Object {
+func applyFunction(env *Environment, fn Object, args []Object, pos ast.Position) Object {
 	switch function := fn.(type) {
 	case *Builtin:
-		return function.Fn(args...)
+		return function.Fn(env, args...)
 	default:
 		return newError(pos.Line, pos.Column, "not a function: %s", fn.Type())
 	}

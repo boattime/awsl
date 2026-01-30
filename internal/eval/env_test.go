@@ -1,9 +1,12 @@
 package eval
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestEnvironment_SetAndGet(t *testing.T) {
-	env := NewEnvironment()
+	env := NewEnvironment(os.Stdout)
 
 	env.Set("x", &Integer{Value: 42})
 
@@ -23,7 +26,7 @@ func TestEnvironment_SetAndGet(t *testing.T) {
 }
 
 func TestEnvironment_GetUndefined(t *testing.T) {
-	env := NewEnvironment()
+	env := NewEnvironment(os.Stdout)
 
 	val, ok := env.Get("undefined")
 	if ok {
@@ -36,7 +39,7 @@ func TestEnvironment_GetUndefined(t *testing.T) {
 }
 
 func TestEnvironment_Overwrite(t *testing.T) {
-	env := NewEnvironment()
+	env := NewEnvironment(os.Stdout)
 
 	env.Set("x", &Integer{Value: 1})
 	env.Set("x", &Integer{Value: 2})
@@ -48,7 +51,7 @@ func TestEnvironment_Overwrite(t *testing.T) {
 }
 
 func TestEnvironment_ReadFromOuter(t *testing.T) {
-	outer := NewEnvironment()
+	outer := NewEnvironment(os.Stdout)
 	outer.Set("x", &Integer{Value: 10})
 
 	inner := NewEnclosedEnvironment(outer)
@@ -64,7 +67,7 @@ func TestEnvironment_ReadFromOuter(t *testing.T) {
 }
 
 func TestEnvironment_ShadowOuter(t *testing.T) {
-	outer := NewEnvironment()
+	outer := NewEnvironment(os.Stdout)
 	outer.Set("x", &Integer{Value: 10})
 
 	inner := NewEnclosedEnvironment(outer)
@@ -84,7 +87,7 @@ func TestEnvironment_ShadowOuter(t *testing.T) {
 }
 
 func TestEnvironment_InnerNotVisibleToOuter(t *testing.T) {
-	outer := NewEnvironment()
+	outer := NewEnvironment(os.Stdout)
 	inner := NewEnclosedEnvironment(outer)
 	inner.Set("y", &Integer{Value: 5})
 
@@ -95,7 +98,7 @@ func TestEnvironment_InnerNotVisibleToOuter(t *testing.T) {
 }
 
 func TestEnvironment_MultipleNestingLevels(t *testing.T) {
-	global := NewEnvironment()
+	global := NewEnvironment(os.Stdout)
 	global.Set("a", &Integer{Value: 1})
 
 	level1 := NewEnclosedEnvironment(global)

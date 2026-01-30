@@ -1,0 +1,6 @@
+print("hello world");
+print(42);
+print("sum:", 5 + 3);
+x = "test";
+print(x);
+print("multiple", "args", 123);

@@ -106,7 +106,7 @@ func (e *Error) Inspect() string {
 }
 
 // BuiltinFunction is the signature for built-in functions.
-type BuiltinFunction func(args ...Object) Object
+type BuiltinFunction func(env *Environment, args ...Object) Object
 
 // Builtin wraps a Go function as an AWSL callable object.
 type Builtin struct {

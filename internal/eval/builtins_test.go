@@ -1,6 +1,8 @@
 package eval
 
 import (
+	"bytes"
+	"os"
 	"testing"
 
 	"github.com/boattime/awsl/internal/lexer"
@@ -12,7 +14,8 @@ func testEvalWithBuiltins(input string) Object {
 	l := lexer.New(input)
 	p := parser.New(l)
 	program := p.ParseProgram()
-	env := NewEnvironment()
+	var stdout bytes.Buffer
+	env := NewEnvironment(&stdout)
 	RegisterBuiltins(env)
 	return Eval(program, env)
 }
@@ -43,7 +46,7 @@ func TestBuiltinPrintWithExpression(t *testing.T) {
 }
 
 func TestRegisterBuiltins(t *testing.T) {
-	env := NewEnvironment()
+	env := NewEnvironment(os.Stdout)
 	RegisterBuiltins(env)
 
 	// Check print is registered

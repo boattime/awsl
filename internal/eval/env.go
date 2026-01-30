@@ -1,20 +1,26 @@
 // Package eval implements the tree-walking interpreter for AWSL.
 package eval
 
+import (
+	"io"
+)
+
 // Environment stores variable bindings for the current scope.
 // It supports nested scopes through an optional outer environment,
 // enabling lexical scoping for functions.
 type Environment struct {
-	store map[string]Object
-	outer *Environment
+	store  map[string]Object
+	outer  *Environment
+	stdout io.Writer
 }
 
 // NewEnvironment creates a new empty environment.
 // Use this to create the global/top-level environment.
-func NewEnvironment() *Environment {
+func NewEnvironment(stdout io.Writer) *Environment {
 	return &Environment{
-		store: make(map[string]Object),
-		outer: nil,
+		store:  make(map[string]Object),
+		outer:  nil,
+		stdout: stdout,
 	}
 }
 
@@ -23,8 +29,9 @@ func NewEnvironment() *Environment {
 // should be readable but assignments create local bindings.
 func NewEnclosedEnvironment(outer *Environment) *Environment {
 	return &Environment{
-		store: make(map[string]Object),
-		outer: outer,
+		store:  make(map[string]Object),
+		outer:  outer,
+		stdout: outer.stdout,
 	}
 }
 
@@ -45,4 +52,12 @@ func (e *Environment) Get(name string) (Object, bool) {
 func (e *Environment) Set(name string, val Object) Object {
 	e.store[name] = val
 	return val
+}
+
+// Stdout returns the stdout writer.
+func (e *Environment) Stdout() io.Writer {
+	if e.stdout != nil {
+		return e.stdout
+	}
+	return nil
 }
