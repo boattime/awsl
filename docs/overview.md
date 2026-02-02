@@ -398,7 +398,11 @@ param_list     = identifier { "," identifier } ;
 
 block          = "{" { statement } "}" ;
 
-expr           = equality ;
+expr           = logic_or ;
+
+logic_or       = logic_and { "||" logic_and } ;
+
+logic_and      = equality { "&&" equality } ;
 
 equality       = comparison { ( "==" | "!=" ) comparison } ;
 

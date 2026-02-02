@@ -52,6 +52,8 @@ const (
 	NOT_EQ   TokenType = "!=" // Inequality operator
 	LTE      TokenType = "<=" // Less than or equal operator
 	GTE      TokenType = ">=" // Greater than or equal operator
+	OR       TokenType = "||" // Logical OR operator
+	AND      TokenType = "&&" // Logical AND operator
 )
 
 // Token types for delimiters.

@@ -906,6 +906,54 @@ func TestIfElseStatement(t *testing.T) {
 	}
 }
 
+func TestIfAndOrStatement(t *testing.T) {
+	program := parseProgram(t, `if (x > 5 && y == 6 || x == 2) { y; }`)
+	requireStatementCount(t, program, 1)
+
+	stmt, ok := program.Statements[0].(*ast.IfStatement)
+	if !ok {
+		t.Fatalf("expected *ast.IfStatement, got %T", program.Statements[0])
+	}
+
+	// Top level should be OR (lowest precedence)
+	orExpr, ok := stmt.Condition.(*ast.InfixExpression)
+	if !ok {
+		t.Fatalf("expected *ast.InfixExpression, got %T", stmt.Condition)
+	}
+	if orExpr.Operator != "||" {
+		t.Errorf("expected operator '||', got %q", orExpr.Operator)
+	}
+
+	// Left side of OR is the AND expression: x > 5 && y == 6
+	andExpr, ok := orExpr.Left.(*ast.InfixExpression)
+	if !ok {
+		t.Fatalf("expected *ast.InfixExpression for AND, got %T", orExpr.Left)
+	}
+	if andExpr.Operator != "&&" {
+		t.Errorf("expected operator '&&', got %q", andExpr.Operator)
+	}
+
+	// Right side of OR is: x == 2
+	eqExpr, ok := orExpr.Right.(*ast.InfixExpression)
+	if !ok {
+		t.Fatalf("expected *ast.InfixExpression for ==, got %T", orExpr.Right)
+	}
+	if eqExpr.Operator != "==" {
+		t.Errorf("expected operator '==', got %q", eqExpr.Operator)
+	}
+	testIdentifier(t, eqExpr.Left, "x")
+	testIntegerLiteral(t, eqExpr.Right, 2)
+
+	// Check consequence
+	if len(stmt.Consequence.Statements) != 1 {
+		t.Fatalf("expected 1 consequence statement, got %d", len(stmt.Consequence.Statements))
+	}
+
+	if stmt.Alternative != nil {
+		t.Error("expected no alternative")
+	}
+}
+
 func TestForStatement(t *testing.T) {
 	program := parseProgram(t, `for (item in items) { print(item); }`)
 	requireStatementCount(t, program, 1)

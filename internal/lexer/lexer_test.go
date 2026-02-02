@@ -7,7 +7,7 @@ import (
 )
 
 func TestNextToken_Operators(t *testing.T) {
-	input := `= + - ! * / < > == != <= >=`
+	input := `= + - ! * / < > == != <= >= && ||`
 
 	tests := []struct {
 		expectedType    token.TokenType
@@ -25,6 +25,8 @@ func TestNextToken_Operators(t *testing.T) {
 		{token.NOT_EQ, "!="},
 		{token.LTE, "<="},
 		{token.GTE, ">="},
+		{token.AND, "&&"},
+		{token.OR, "||"},
 		{token.EOF, ""},
 	}
 
@@ -544,7 +546,7 @@ func TestNextToken_ForLoop(t *testing.T) {
 }
 
 func TestNextToken_IllegalCharacter(t *testing.T) {
-	input := `@#$`
+	input := `@#$&`
 
 	tests := []struct {
 		expectedType    token.TokenType
@@ -553,6 +555,7 @@ func TestNextToken_IllegalCharacter(t *testing.T) {
 		{token.ILLEGAL, "@"},
 		{token.ILLEGAL, "#"},
 		{token.ILLEGAL, "$"},
+		{token.ILLEGAL, "&"},
 		{token.EOF, ""},
 	}
 

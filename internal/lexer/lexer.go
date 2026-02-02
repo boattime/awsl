@@ -90,7 +90,19 @@ func (l *Lexer) NextToken() token.Token {
 	case '.':
 		tok = newToken(token.DOT, l.ch, startLine, startColumn)
 	case '|':
-		tok = newToken(token.PIPE, l.ch, startLine, startColumn)
+		if l.peekChar() == '|' {
+			l.readChar()
+			tok = token.Token{Type: token.OR, Literal: "||", Line: startLine, Column: startColumn}
+		} else {
+			tok = newToken(token.PIPE, l.ch, startLine, startColumn)
+		}
+	case '&':
+		if l.peekChar() == '&' {
+			l.readChar()
+			tok = token.Token{Type: token.AND, Literal: "&&", Line: startLine, Column: startColumn}
+		} else {
+			tok = newToken(token.ILLEGAL, l.ch, startLine, startColumn)
+		}
 	case '(':
 		tok = newToken(token.LPAREN, l.ch, startLine, startColumn)
 	case ')':

@@ -521,9 +521,67 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 // parseExpression parses an expression.
 // This is the entry point for expression parsing and starts at the lowest
 // precedence level (equality).
-// Grammar: expr = equality ;
+// Grammar: expr = logic_or ;
 func (p *Parser) parseExpression() ast.Expression {
-	return p.parseEquality()
+	return p.parseOr()
+}
+
+// parseOr parses or expressions.
+// Grammar: logic_or = logic_and { "||" logic_and } ;
+func (p *Parser) parseOr() ast.Expression {
+	left := p.parseAnd()
+	if left == nil {
+		return nil
+	}
+
+	for p.peekTokenIs(token.OR) {
+		p.nextToken() // Move to or
+		or := p.curToken
+
+		p.nextToken() // Move past or
+		right := p.parseAnd()
+		if right == nil {
+			return nil
+		}
+
+		left = &ast.InfixExpression{
+			Token:    or,
+			Left:     left,
+			Operator: or.Literal,
+			Right:    right,
+		}
+	}
+
+	return left
+}
+
+// parseAnd parses and expressions.
+// Grammar: logic_and = equality { "&&" equality } ;
+func (p *Parser) parseAnd() ast.Expression {
+	left := p.parseEquality()
+	if left == nil {
+		return nil
+	}
+
+	for p.peekTokenIs(token.AND) {
+		p.nextToken() // Move to and
+		and := p.curToken
+
+		p.nextToken() // Move past and
+		right := p.parseEquality()
+		if right == nil {
+			return nil
+		}
+
+		left = &ast.InfixExpression{
+			Token:    and,
+			Left:     left,
+			Operator: and.Literal,
+			Right:    right,
+		}
+	}
+
+	return left
 }
 
 // parseEquality parses equality expressions.
