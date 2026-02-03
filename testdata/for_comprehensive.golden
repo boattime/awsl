@@ -1,0 +1,34 @@
+Sum 1-5: 15
+Empty loop count: 0
+Greetings:
+  Hello, Alice
+  Hello, Bob
+  Hello, Charlie
+Multiplication:
+  1 * 10 = 10
+  1 * 20 = 20
+  2 * 10 = 20
+  2 * 20 = 40
+  3 * 10 = 30
+  3 * 20 = 60
+Number classification:
+  1 is small
+  2 is small
+  3 is small
+  4 is big
+  5 is big
+  6 is big
+Matches (>3 && <8 || ==10): 5
+5! = 120
+Outer x after loop: 999
+Scaled sum: 60
+List variable sum: 600
+Mixed list iteration:
+  42
+  hello
+  true
+  null
+Size counts - small: 2 medium: 3 large: 2
+Deep nested sum: 27
+All for loop tests passed!
+--- exit code: 0 ---

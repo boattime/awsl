@@ -1,0 +1,112 @@
+// Basic iteration with sum
+sum = 0;
+for (x in [1, 2, 3, 4, 5]) {
+    sum = sum + x;
+}
+print("Sum 1-5:", sum);
+
+// Empty list - should not execute body
+empty_count = 0;
+for (x in []) {
+    empty_count = empty_count + 1;
+}
+print("Empty loop count:", empty_count);
+
+// Iterating over strings
+print("Greetings:");
+for (name in ["Alice", "Bob", "Charlie"]) {
+    print("  Hello,", name);
+}
+
+// Nested loops
+print("Multiplication:");
+for (i in [1, 2, 3]) {
+    for (j in [10, 20]) {
+        print(" ", i, "*", j, "=", i * j);
+    }
+}
+
+// For with if/else
+print("Number classification:");
+for (n in [1, 2, 3, 4, 5, 6]) {
+    if (n > 3) {
+        print(" ", n, "is big");
+    } else {
+        print(" ", n, "is small");
+    }
+}
+
+// For with logical operators in condition
+match_count = 0;
+for (x in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+    if (x > 3 && x < 8 || x == 10) {
+        match_count = match_count + 1;
+    }
+}
+print("Matches (>3 && <8 || ==10):", match_count);
+
+// Accumulator pattern - factorial
+factorial = 1;
+for (n in [1, 2, 3, 4, 5]) {
+    factorial = factorial * n;
+}
+print("5! =", factorial);
+
+// Iterator variable scoping - outer x should be unchanged
+x = 999;
+for (x in [1, 2, 3]) {
+    y = x;
+}
+print("Outer x after loop:", x);
+
+// Access outer scope from inside loop
+multiplier = 10;
+scaled_sum = 0;
+for (n in [1, 2, 3]) {
+    scaled_sum = scaled_sum + n * multiplier;
+}
+print("Scaled sum:", scaled_sum);
+
+// List stored in variable
+my_list = [100, 200, 300];
+list_sum = 0;
+for (item in my_list) {
+    list_sum = list_sum + item;
+}
+print("List variable sum:", list_sum);
+
+// Mixed types in list
+print("Mixed list iteration:");
+for (item in [42, "hello", true, null]) {
+    print(" ", item);
+}
+
+// Complex nested with multiple conditions
+small = 0;
+medium = 0;
+large = 0;
+for (item in [10, 25, 30, 45, 50, 65, 70]) {
+    if (item < 30) {
+        small = small + 1;
+    } else {
+        if (item < 60) {
+            medium = medium + 1;
+        } else {
+            large = large + 1;
+        }
+    }
+}
+print("Size counts - small:", small, "medium:", medium, "large:", large);
+
+// Deeply nested loops
+deep_sum = 0;
+for (a in [1, 2]) {
+    for (b in [1, 2]) {
+        for (c in [1, 2]) {
+            deep_sum = deep_sum + a * b * c;
+        }
+    }
+}
+print("Deep nested sum:", deep_sum);
+
+print("All for loop tests passed!");

@@ -825,3 +825,81 @@ func TestAssignmentWithExpressionUsingVariable(t *testing.T) {
 	evaluated := testEval(input)
 	testIntegerObject(t, evaluated, 15)
 }
+
+func TestListLiteralEmpty(t *testing.T) {
+	evaluated := testEval("[];")
+	list, ok := evaluated.(*List)
+	if !ok {
+		t.Fatalf("expected *List, got %T", evaluated)
+	}
+	if len(list.Elements) != 0 {
+		t.Errorf("expected 0 elements, got %d", len(list.Elements))
+	}
+}
+
+func TestListLiteralIntegers(t *testing.T) {
+	evaluated := testEval("[1, 2, 3];")
+	list, ok := evaluated.(*List)
+	if !ok {
+		t.Fatalf("expected *List, got %T", evaluated)
+	}
+	if len(list.Elements) != 3 {
+		t.Fatalf("expected 3 elements, got %d", len(list.Elements))
+	}
+
+	testIntegerObject(t, list.Elements[0], 1)
+	testIntegerObject(t, list.Elements[1], 2)
+	testIntegerObject(t, list.Elements[2], 3)
+}
+
+func TestListLiteralMixedTypes(t *testing.T) {
+	evaluated := testEval(`[1, "hello", true, null];`)
+	list, ok := evaluated.(*List)
+	if !ok {
+		t.Fatalf("expected *List, got %T", evaluated)
+	}
+	if len(list.Elements) != 4 {
+		t.Fatalf("expected 4 elements, got %d", len(list.Elements))
+	}
+
+	testIntegerObject(t, list.Elements[0], 1)
+	testStringObject(t, list.Elements[1], "hello")
+	testBooleanObject(t, list.Elements[2], true)
+	testNullObject(t, list.Elements[3])
+}
+
+func TestForStatementBasic(t *testing.T) {
+	input := `
+		sum = 0;
+		for (x in [1, 2, 3]) {
+			sum = sum + x;
+		}
+		sum;
+	`
+	evaluated := testEval(input)
+	testIntegerObject(t, evaluated, 6)
+}
+
+func TestForStatementEmptyList(t *testing.T) {
+	input := `
+		sum = 0;
+		for (x in []) {
+			sum = sum + 1;
+		}
+		sum;
+	`
+	evaluated := testEval(input)
+	testIntegerObject(t, evaluated, 0)
+}
+
+func TestForStatementStrings(t *testing.T) {
+	input := `
+		result = "";
+		for (s in ["a", "b", "c"]) {
+			result = result + s;
+		}
+		result;
+	`
+	evaluated := testEval(input)
+	testStringObject(t, evaluated, "abc")
+}

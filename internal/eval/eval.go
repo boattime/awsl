@@ -23,6 +23,8 @@ func Eval(node ast.Node, env *Environment) Object {
 		return evalBlock(node, env)
 	case *ast.IfStatement:
 		return evalIf(node, env)
+	case *ast.ForStatement:
+		return evalFor(node, env)
 
 	// Literals
 	case *ast.IntegerLiteral:
@@ -35,6 +37,8 @@ func Eval(node ast.Node, env *Environment) Object {
 		return nativeBoolToBooleanObject(node.Value)
 	case *ast.NullLiteral:
 		return NULL
+	case *ast.ListLiteral:
+		return evalListLiteral(node, env)
 
 	// Expressions
 	case *ast.Identifier:
@@ -106,6 +110,33 @@ func evalIf(node *ast.IfStatement, env *Environment) Object {
 		Eval(node.Consequence, env)
 	} else if node.Alternative != nil {
 		Eval(node.Alternative, env)
+	}
+
+	return NULL
+}
+
+// evalFor evaluates a for statement.
+func evalFor(node *ast.ForStatement, env *Environment) Object {
+	iterable := Eval(node.Iterable, env)
+	if isError(iterable) {
+		return iterable
+	}
+
+	list, ok := iterable.(*List)
+	if !ok {
+		pos := node.Pos()
+		return newError(pos.Line, pos.Column, "cannot iterate over %s", iterable.Type())
+	}
+
+	loopEnv := NewEnclosedEnvironment(env)
+
+	for _, elem := range list.Elements {
+		loopEnv.SetLocal(node.Iterator.Value, elem)
+
+		result := Eval(node.Body, loopEnv)
+		if isError(result) {
+			return result
+		}
 	}
 
 	return NULL
@@ -335,6 +366,21 @@ func nativeBoolToBooleanObject(value bool) *Boolean {
 		return TRUE
 	}
 	return FALSE
+}
+
+// evalListLiteral evaluates a list literal.
+func evalListLiteral(node *ast.ListLiteral, env *Environment) Object {
+	elements := make([]Object, len(node.Elements))
+
+	for i, elem := range node.Elements {
+		evaluated := Eval(elem, env)
+		if isError(evaluated) {
+			return evaluated
+		}
+		elements[i] = evaluated
+	}
+
+	return &List{Elements: elements}
 }
 
 // newError creates a new Error object with position information.

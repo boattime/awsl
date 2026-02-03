@@ -210,6 +210,29 @@ func TestErrorObject(t *testing.T) {
 	}
 }
 
+func TestListElements(t *testing.T) {
+	elements := []Object{
+		&Integer{Value: 10},
+		&Integer{Value: 20},
+		&Integer{Value: 30},
+	}
+	list := &List{Elements: elements}
+
+	if len(list.Elements) != 3 {
+		t.Fatalf("expected 3 elements, got %d", len(list.Elements))
+	}
+
+	for i, expected := range []int64{10, 20, 30} {
+		integer, ok := list.Elements[i].(*Integer)
+		if !ok {
+			t.Fatalf("element %d is not *Integer, got %T", i, list.Elements[i])
+		}
+		if integer.Value != expected {
+			t.Errorf("element %d = %d, want %d", i, integer.Value, expected)
+		}
+	}
+}
+
 func TestObjectInterface(t *testing.T) {
 	objects := []Object{
 		&Integer{Value: 42},
@@ -218,6 +241,7 @@ func TestObjectInterface(t *testing.T) {
 		&Boolean{Value: true},
 		&Null{},
 		&Error{Message: "test", Line: 1, Column: 1},
+		&List{Elements: []Object{&Integer{Value: 1}}},
 		TRUE,
 		FALSE,
 		NULL,

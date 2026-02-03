@@ -71,7 +71,7 @@ func TestEnvironment_ShadowOuter(t *testing.T) {
 	outer.Set("x", &Integer{Value: 10})
 
 	inner := NewEnclosedEnvironment(outer)
-	inner.Set("x", &Integer{Value: 99})
+	inner.SetLocal("x", &Integer{Value: 99})
 
 	// Inner sees shadowed value
 	val, _ := inner.Get("x")

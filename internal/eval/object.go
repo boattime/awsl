@@ -2,7 +2,10 @@
 // These objects are produced by the evaluator when executing AWSL programs.
 package eval
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // ObjectType represents the type of a runtime object as a string.
 type ObjectType string
@@ -16,6 +19,7 @@ const (
 	NULL_OBJ    = "NULL"
 	ERROR_OBJ   = "ERROR"
 	BUILTIN_OBJ = "BUILTIN"
+	LIST_OBJ    = "LIST"
 )
 
 // Object is the interface that all runtime values implement.
@@ -119,3 +123,25 @@ func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
 
 // Inspect returns the builtin function name.
 func (b *Builtin) Inspect() string { return "builtin:" + b.Name }
+
+// List represents a list/array value at runtime.
+type List struct {
+	Elements []Object
+}
+
+// Type returns LIST_OBJ.
+func (l *List) Type() ObjectType { return LIST_OBJ }
+
+// Inspect returns the list as a string.
+func (l *List) Inspect() string {
+	var out strings.Builder
+	out.WriteString("[")
+	for i, elem := range l.Elements {
+		if i > 0 {
+			out.WriteString(", ")
+		}
+		out.WriteString(elem.Inspect())
+	}
+	out.WriteString("]")
+	return out.String()
+}

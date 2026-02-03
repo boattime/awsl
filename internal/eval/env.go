@@ -46,12 +46,38 @@ func (e *Environment) Get(name string) (Object, bool) {
 	return obj, ok
 }
 
-// Set stores a value in the current scope.
-// This always creates or updates a binding in the current scope,
-// shadowing any variable with the same name in outer scopes.
+// Set stores a value in the outer scope first then
+// falls back to current scope.
 func (e *Environment) Set(name string, val Object) Object {
+	if _, ok := e.store[name]; ok {
+		e.store[name] = val
+		return val
+	}
+
+	if e.outer != nil && e.outer.Has(name) {
+		return e.outer.Set(name, val)
+	}
+
 	e.store[name] = val
 	return val
+}
+
+// SetLocal always creates or updates a binding in the current scope only,
+// shadowing any variable with the same name in outer scopes.
+func (e *Environment) SetLocal(name string, val Object) Object {
+	e.store[name] = val
+	return val
+}
+
+// Has checks if a variable exists in this scope or any outer scope recursively.
+func (e *Environment) Has(name string) bool {
+	if _, ok := e.store[name]; ok {
+		return true
+	}
+	if e.outer != nil {
+		return e.outer.Has(name)
+	}
+	return false
 }
 
 // Stdout returns the stdout writer.
