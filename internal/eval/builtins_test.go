@@ -55,23 +55,43 @@ func TestBuiltinPrintWithExpression(t *testing.T) {
 	testNullObject(t, result)
 }
 
+func TestBuiltinClock(t *testing.T) {
+	var stdout bytes.Buffer
+	obj := testEvalWithBuiltins(`clock();`, &stdout)
+	_, ok := obj.(*Integer)
+	if !ok {
+		t.Errorf("object is not Integer. got=%T (%+v)", obj, obj)
+	}
+}
+
 func TestRegisterBuiltins(t *testing.T) {
 	env := NewEnvironment(os.Stdout)
 	RegisterBuiltins(env)
-
-	// Check print is registered
-	val, ok := env.Get("print")
-	if !ok {
-		t.Fatal("expected 'print' to be registered")
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"print", "print"},
+		{"clock", "clock"},
 	}
 
-	builtin, ok := val.(*Builtin)
-	if !ok {
-		t.Fatalf("expected *Builtin, got %T", val)
-	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			val, ok := env.Get(tt.input)
 
-	if builtin.Name != "print" {
-		t.Errorf("expected name 'print', got %q", builtin.Name)
+			if !ok {
+				t.Fatalf("expected '%s' to be registered", tt.expected)
+			}
+
+			builtin, ok := val.(*Builtin)
+			if !ok {
+				t.Fatalf("expected *Builtin, got %T", val)
+			}
+
+			if builtin.Name != tt.expected {
+				t.Errorf("expected name 'print', got %q", builtin.Name)
+			}
+		})
 	}
 }
 

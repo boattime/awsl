@@ -1,13 +1,20 @@
 // Package eval implements the tree-walking interpreter for AWSL.
 package eval
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // Builtins contains all built-in functions available in AWSL.
 var Builtins = map[string]*Builtin{
 	"print": {
 		Name: "print",
 		Fn:   builtinPrint,
+	},
+	"clock": {
+		Name: "clock",
+		Fn:   builtinClock,
 	},
 }
 
@@ -27,4 +34,10 @@ func builtinPrint(env *Environment, args ...Object) Object {
 	}
 	fmt.Fprintln(env.Stdout(), values...)
 	return NULL
+}
+
+// builtinClock get the current time in unix seconds.
+// Returns Integer in unix seconds.
+func builtinClock(env *Environment, args ...Object) Object {
+	return &Integer{Value: time.Now().Unix()}
 }
