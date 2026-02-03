@@ -666,6 +666,146 @@ func TestAssignmentDifferentTypes(t *testing.T) {
 	}
 }
 
+func TestIfStatementTruthy(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"x = 0; if (true) { x = 10; } x;", 10},
+		{"x = 0; if (5 > 3) { x = 10; } x;", 10},
+		{"x = 0; if (1 == 1) { x = 42; } x;", 42},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testIntegerObject(t, evaluated, tt.expected)
+		})
+	}
+}
+
+func TestIfStatementFalsy(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"x = 5; if (false) { x = 10; } x;", 5},
+		{"x = 5; if (3 > 5) { x = 10; } x;", 5},
+		{"x = 5; if (1 == 2) { x = 42; } x;", 5},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testIntegerObject(t, evaluated, tt.expected)
+		})
+	}
+}
+
+func TestIfElseStatement(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"x = 0; if (true) { x = 10; } else { x = 20; } x;", 10},
+		{"x = 0; if (false) { x = 10; } else { x = 20; } x;", 20},
+		{"x = 0; if (5 > 10) { x = 10; } else { x = 20; } x;", 20},
+		{"x = 0; if (10 > 5) { x = 10; } else { x = 20; } x;", 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testIntegerObject(t, evaluated, tt.expected)
+		})
+	}
+}
+
+func TestIfStatementReturnsNull(t *testing.T) {
+	tests := []string{
+		"if (true) { 5; }",
+		"if (false) { 5; }",
+		"if (true) { 5; } else { 10; }",
+	}
+
+	for _, input := range tests {
+		t.Run(input, func(t *testing.T) {
+			evaluated := testEval(input)
+			testNullObject(t, evaluated)
+		})
+	}
+}
+
+func TestIfStatementWithNestedBlocks(t *testing.T) {
+	input := `
+		x = 0;
+		if (true) {
+			if (true) {
+				x = 42;
+			}
+		}
+		x;
+	`
+	evaluated := testEval(input)
+	testIntegerObject(t, evaluated, 42)
+}
+
+func TestIfStatementConditionError(t *testing.T) {
+	evaluated := testEval("if (undefined_var) { 5; }")
+	testErrorObject(t, evaluated, "undefined variable: undefined_var")
+}
+
+func TestBlockStatementMultipleStatements(t *testing.T) {
+	input := `
+		x = 0;
+		if (true) {
+			x = 1;
+			x = x + 1;
+			x = x + 1;
+		}
+		x;
+	`
+	evaluated := testEval(input)
+	testIntegerObject(t, evaluated, 3)
+}
+
+func TestLogicalOperatorsPrecedence(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{"true || false && false;", true},
+		{"false || true && true;", true},
+		{"false && true || true;", true},
+		{"false && false || false;", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testBooleanObject(t, evaluated, tt.expected)
+		})
+	}
+}
+
+func TestComplexLogicalExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"x = 0; if (5 > 3 && 10 > 5 || false) { x = 42; } x;", 42},
+		{"x = 0; if (false || 5 > 3 && 10 > 5) { x = 42; } x;", 42},
+		{"x = 0; if (1 == 2 && 3 == 3 || 4 == 4) { x = 42; } x;", 42},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testIntegerObject(t, evaluated, tt.expected)
+		})
+	}
+}
+
 func TestUndefinedVariable(t *testing.T) {
 	evaluated := testEval("foobar;")
 	testErrorObject(t, evaluated, "undefined variable: foobar")

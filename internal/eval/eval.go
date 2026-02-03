@@ -19,6 +19,10 @@ func Eval(node ast.Node, env *Environment) Object {
 		return Eval(node.Expression, env)
 	case *ast.AssignmentStatement:
 		return evalAssignment(node, env)
+	case *ast.BlockStatement:
+		return evalBlock(node, env)
+	case *ast.IfStatement:
+		return evalIf(node, env)
 
 	// Literals
 	case *ast.IntegerLiteral:
@@ -75,6 +79,35 @@ func evalAssignment(node *ast.AssignmentStatement, env *Environment) Object {
 	}
 
 	env.Set(node.Name.Value, val)
+	return NULL
+}
+
+// evalBlock evaluates a block statement.
+func evalBlock(node *ast.BlockStatement, env *Environment) Object {
+	for _, stmt := range node.Statements {
+		block := Eval(stmt, env)
+
+		if isError(block) {
+			return block
+		}
+	}
+
+	return NULL
+}
+
+// evalIf evaluates an if statement.
+func evalIf(node *ast.IfStatement, env *Environment) Object {
+	condition := Eval(node.Condition, env)
+	if isError(condition) {
+		return condition
+	}
+
+	if condition.(*Boolean).Value {
+		Eval(node.Consequence, env)
+	} else if node.Alternative != nil {
+		Eval(node.Alternative, env)
+	}
+
 	return NULL
 }
 
@@ -200,6 +233,10 @@ func evalInfixExpression(node *ast.InfixExpression, env *Environment) Object {
 		return nativeBoolToBooleanObject(left == right)
 	case op == token.NOT_EQ:
 		return nativeBoolToBooleanObject(left != right)
+	case op == token.OR:
+		return nativeBoolToBooleanObject(isTruthy(left) || isTruthy(right))
+	case op == token.AND:
+		return nativeBoolToBooleanObject(isTruthy(left) && isTruthy(right))
 	case left.Type() != right.Type():
 		return newError(pos.Line, pos.Column, "type mismatch: %s %s %s", left.Type(), node.Token.Literal, right.Type())
 	default:
@@ -312,4 +349,17 @@ func newError(line, column int, format string, args ...any) *Error {
 // isError checks if an object is an Error.
 func isError(obj Object) bool {
 	return obj != nil && obj.Type() == ERROR_OBJ
+}
+
+// isTruthy determines the boolean value of an object.
+func isTruthy(obj Object) bool {
+	switch obj := obj.(type) {
+	case *Boolean:
+		return obj.Value
+	case *Null:
+		return false
+	default:
+		return true
+	}
+
 }

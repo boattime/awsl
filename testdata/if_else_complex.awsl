@@ -1,0 +1,63 @@
+score = 85;
+has_bonus = true;
+penalty = 0;
+
+// Determine grade based on score
+grade = 0;
+
+if (score >= 90 && has_bonus) {
+    grade = 1;
+    print("Grade: A+");
+} else {
+    if (score >= 90 || score >= 80 && has_bonus) {
+        grade = 2;
+        print("Grade: A");
+    } else {
+        if (score >= 70) {
+            grade = 3;
+            print("Grade: B");
+        } else {
+            grade = 4;
+            print("Grade: C or below");
+        }
+    }
+}
+
+// Apply penalty check
+final_grade = grade;
+if (penalty > 0 && grade < 4) {
+    final_grade = grade + 1;
+    print("Penalty applied");
+} else {
+    if (penalty == 0 && has_bonus && grade > 1) {
+        final_grade = grade - 1;
+        print("Bonus applied");
+    }
+}
+
+print("Initial grade level:", grade);
+print("Final grade level:", final_grade);
+
+// Multiple independent checks
+passed = false;
+honored = false;
+celebrated = false;
+
+if (final_grade <= 2) {
+    passed = true;
+}
+
+if (final_grade == 1) {
+    honored = true;
+    celebrated = true;
+}
+
+if (passed && honored || celebrated && has_bonus) {
+    print("Congratulations!");
+}
+
+if (passed) {
+    print("You passed!");
+} else {
+    print("Try again.");
+}
