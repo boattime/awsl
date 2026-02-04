@@ -1,6 +1,12 @@
 package eval
 
-import "testing"
+import (
+	"os"
+	"testing"
+
+	"github.com/boattime/awsl/internal/ast"
+	"github.com/boattime/awsl/internal/token"
+)
 
 func TestIntegerObject(t *testing.T) {
 	tests := []struct {
@@ -263,5 +269,105 @@ func TestBuiltinObject(t *testing.T) {
 
 	if obj.Inspect() != "builtin:test" {
 		t.Errorf("Builtin.Inspect() = %q, want %q", obj.Inspect(), "builtin:test")
+	}
+}
+
+func TestFunctionObject(t *testing.T) {
+	tests := []struct {
+		name            string
+		parameters      []*ast.Identifier
+		expectedType    ObjectType
+		expectedInspect string
+	}{
+		{
+			name:            "no parameters",
+			parameters:      []*ast.Identifier{},
+			expectedType:    FUNCTION_OBJ,
+			expectedInspect: "fn() {...}",
+		},
+		{
+			name: "one parameter",
+			parameters: []*ast.Identifier{
+				{Token: token.Token{Literal: "x"}, Value: "x"},
+			},
+			expectedType:    FUNCTION_OBJ,
+			expectedInspect: "fn(x) {...}",
+		},
+		{
+			name: "multiple parameters",
+			parameters: []*ast.Identifier{
+				{Token: token.Token{Literal: "a"}, Value: "a"},
+				{Token: token.Token{Literal: "b"}, Value: "b"},
+				{Token: token.Token{Literal: "c"}, Value: "c"},
+			},
+			expectedType:    FUNCTION_OBJ,
+			expectedInspect: "fn(a, b, c) {...}",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			obj := &Function{
+				Parameters: tt.parameters,
+				Body:       &ast.BlockStatement{},
+				Env:        NewEnvironment(os.Stdout),
+			}
+
+			if obj.Type() != tt.expectedType {
+				t.Errorf("Function.Type() = %q, want %q", obj.Type(), tt.expectedType)
+			}
+
+			if obj.Inspect() != tt.expectedInspect {
+				t.Errorf("Function.Inspect() = %q, want %q", obj.Inspect(), tt.expectedInspect)
+			}
+		})
+	}
+}
+
+func TestReturnValueObject(t *testing.T) {
+	tests := []struct {
+		name            string
+		value           Object
+		expectedType    ObjectType
+		expectedInspect string
+	}{
+		{
+			name:            "integer return",
+			value:           &Integer{Value: 42},
+			expectedType:    RETURN_VALUE_OBJ,
+			expectedInspect: "42",
+		},
+		{
+			name:            "string return",
+			value:           &String{Value: "hello"},
+			expectedType:    RETURN_VALUE_OBJ,
+			expectedInspect: "hello",
+		},
+		{
+			name:            "null return",
+			value:           NULL,
+			expectedType:    RETURN_VALUE_OBJ,
+			expectedInspect: "null",
+		},
+		{
+			name:            "boolean return",
+			value:           TRUE,
+			expectedType:    RETURN_VALUE_OBJ,
+			expectedInspect: "true",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			obj := &ReturnValue{Value: tt.value}
+
+			if obj.Type() != tt.expectedType {
+				t.Errorf("ReturnValue.Type() = %q, want %q", obj.Type(), tt.expectedType)
+			}
+
+			if obj.Inspect() != tt.expectedInspect {
+				t.Errorf("ReturnValue.Inspect() = %q, want %q", obj.Inspect(), tt.expectedInspect)
+			}
+		})
 	}
 }

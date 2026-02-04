@@ -48,6 +48,8 @@ func (e *Environment) Get(name string) (Object, bool) {
 
 // Set stores a value in the outer scope first then
 // falls back to current scope.
+// TODO: Add `local` keyword for explicit local declaration to prevent
+// accidental shadowing of outer variables. e.g., `local x = 100;`
 func (e *Environment) Set(name string, val Object) Object {
 	if _, ok := e.store[name]; ok {
 		e.store[name] = val

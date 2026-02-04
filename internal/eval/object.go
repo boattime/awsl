@@ -5,6 +5,8 @@ package eval
 import (
 	"fmt"
 	"strings"
+
+	"github.com/boattime/awsl/internal/ast"
 )
 
 // ObjectType represents the type of a runtime object as a string.
@@ -12,14 +14,16 @@ type ObjectType string
 
 // Object types.
 const (
-	INTEGER_OBJ = "INTEGER"
-	FLOAT_OBJ   = "FLOAT"
-	STRING_OBJ  = "STRING"
-	BOOLEAN_OBJ = "BOOLEAN"
-	NULL_OBJ    = "NULL"
-	ERROR_OBJ   = "ERROR"
-	BUILTIN_OBJ = "BUILTIN"
-	LIST_OBJ    = "LIST"
+	INTEGER_OBJ      = "INTEGER"
+	FLOAT_OBJ        = "FLOAT"
+	STRING_OBJ       = "STRING"
+	BOOLEAN_OBJ      = "BOOLEAN"
+	NULL_OBJ         = "NULL"
+	ERROR_OBJ        = "ERROR"
+	BUILTIN_OBJ      = "BUILTIN"
+	LIST_OBJ         = "LIST"
+	FUNCTION_OBJ     = "FUNCTION"
+	RETURN_VALUE_OBJ = "RETURN_VALUE"
 )
 
 // Object is the interface that all runtime values implement.
@@ -145,3 +149,37 @@ func (l *List) Inspect() string {
 	out.WriteString("]")
 	return out.String()
 }
+
+// Function represents a user-defined function.
+type Function struct {
+	Parameters []*ast.Identifier
+	Body       *ast.BlockStatement
+	Env        *Environment
+}
+
+// Type returns FUNCTION_OBJ.
+func (f *Function) Type() ObjectType { return FUNCTION_OBJ }
+
+// Inspect returns a string representation of the function.
+func (f *Function) Inspect() string {
+	var out strings.Builder
+	params := make([]string, len(f.Parameters))
+	for i, p := range f.Parameters {
+		params[i] = p.Value
+	}
+	out.WriteString("fn(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") {...}")
+	return out.String()
+}
+
+// ReturnValue wraps a value being returned from a function.
+type ReturnValue struct {
+	Value Object
+}
+
+// Type returns RETURN_VALUE_OBJ.
+func (rv *ReturnValue) Type() ObjectType { return RETURN_VALUE_OBJ }
+
+// Inspect returns the wrapped value's representation.
+func (rv *ReturnValue) Inspect() string { return rv.Value.Inspect() }

@@ -25,6 +25,10 @@ func Eval(node ast.Node, env *Environment) Object {
 		return evalIf(node, env)
 	case *ast.ForStatement:
 		return evalFor(node, env)
+	case *ast.FunctionDeclaration:
+		return evalFunctionDeclaration(node, env)
+	case *ast.ReturnStatement:
+		return evalReturnStatement(node, env)
 
 	// Literals
 	case *ast.IntegerLiteral:
@@ -88,15 +92,19 @@ func evalAssignment(node *ast.AssignmentStatement, env *Environment) Object {
 
 // evalBlock evaluates a block statement.
 func evalBlock(node *ast.BlockStatement, env *Environment) Object {
+	var result Object = NULL
 	for _, stmt := range node.Statements {
-		block := Eval(stmt, env)
+		result := Eval(stmt, env)
+		if isError(result) {
+			return result
+		}
 
-		if isError(block) {
-			return block
+		if result.Type() == RETURN_VALUE_OBJ {
+			return result
 		}
 	}
 
-	return NULL
+	return result
 }
 
 // evalIf evaluates an if statement.
@@ -107,9 +115,9 @@ func evalIf(node *ast.IfStatement, env *Environment) Object {
 	}
 
 	if condition.(*Boolean).Value {
-		Eval(node.Consequence, env)
+		return Eval(node.Consequence, env)
 	} else if node.Alternative != nil {
-		Eval(node.Alternative, env)
+		return Eval(node.Alternative, env)
 	}
 
 	return NULL
@@ -140,6 +148,31 @@ func evalFor(node *ast.ForStatement, env *Environment) Object {
 	}
 
 	return NULL
+}
+
+// evalFunctionDeclaration stores a function in the environment.
+func evalFunctionDeclaration(node *ast.FunctionDeclaration, env *Environment) Object {
+	fn := &Function{
+		Parameters: node.Parameters,
+		Body:       node.Body,
+		Env:        env,
+	}
+	env.Set(node.Name.Value, fn)
+	return NULL
+}
+
+// evalReturnStatement evaluates a return statement.
+func evalReturnStatement(node *ast.ReturnStatement, env *Environment) Object {
+	if node.Value == nil {
+		return &ReturnValue{Value: NULL}
+	}
+
+	val := Eval(node.Value, env)
+	if isError(val) {
+		return val
+	}
+
+	return &ReturnValue{Value: val}
 }
 
 // evalIdentifier looks up a variable in the environment.
@@ -185,11 +218,36 @@ func evalArguments(arguments []ast.Argument, env *Environment) ([]Object, *Error
 // applyFunction calls a function with the given arguments.
 func applyFunction(env *Environment, fn Object, args []Object, pos ast.Position) Object {
 	switch function := fn.(type) {
+	case *Function:
+		if len(args) != len(function.Parameters) {
+			return newError(pos.Line, pos.Column, "wrong number of arguments: expected %d, got %d",
+				len(function.Parameters), len(args))
+		}
+		extendedEnv := extendFunctionEnv(function, args)
+		evaluated := Eval(function.Body, extendedEnv)
+		return unwrapReturnValue(evaluated)
 	case *Builtin:
 		return function.Fn(env, args...)
 	default:
 		return newError(pos.Line, pos.Column, "not a function: %s", fn.Type())
 	}
+}
+
+// extendFunctionEnv creates a new environment for function execution.
+func extendFunctionEnv(fn *Function, args []Object) *Environment {
+	env := NewEnclosedEnvironment(fn.Env)
+	for i, param := range fn.Parameters {
+		env.Set(param.Value, args[i])
+	}
+	return env
+}
+
+// unwrapReturnValue extracts the value from a ReturnValue wrapper.
+func unwrapReturnValue(obj Object) Object {
+	if returnValue, ok := obj.(*ReturnValue); ok {
+		return returnValue.Value
+	}
+	return obj
 }
 
 // evalPrefixExpression evaluates prefix operators (! and -).

@@ -903,3 +903,39 @@ func TestForStatementStrings(t *testing.T) {
 	evaluated := testEval(input)
 	testStringObject(t, evaluated, "abc")
 }
+
+func TestReturnStatements(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected int64
+	}{
+		{
+			name:     "simple return",
+			input:    "fn test() { return 10; } test();",
+			expected: 10,
+		},
+		{
+			name:     "return with expression",
+			input:    "fn test() { return 5 + 5; } test();",
+			expected: 10,
+		},
+		{
+			name:     "early return",
+			input:    "fn test() { return 10; return 20; } test();",
+			expected: 10,
+		},
+		{
+			name:     "return in if",
+			input:    "fn test(x) { if (x > 5) { return 1; } return 0; } test(10);",
+			expected: 1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testIntegerObject(t, evaluated, tt.expected)
+		})
+	}
+}

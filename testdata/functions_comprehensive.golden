@@ -1,0 +1,49 @@
+Hello, World!
+five(): 5
+double(5): 10
+add(3, 4): 7
+sum3(1, 2, 3): 6
+earlyReturn(): 1
+absolute(5): 5
+absolute(-5): 5
+grade(95): A
+grade(75): C
+grade(50): F
+noReturn() == null: true
+getOuterX(): 100
+counter after 3 increments: 3
+total: 30
+total after reset: 0
+sumOfSquares(3, 4): 25
+double(triple(5)): 30
+sum([1,2,3,4,5]): 15
+sum([]): 0
+countItems([1,2,3]): 3
+isInRange(5, 1, 10): true
+isInRange(15, 1, 10): false
+canDrive(20, true): true
+canDrive(20, false): false
+canDrive(16, true): false
+either(true, false): true
+either(false, false): false
+factorial(5): 120
+factorial(10): 3628800
+fib(10): 55
+empty() == null: true
+shadowX before: 999
+shadowTest(5): 10
+shadowX after: 5
+redefTest() first: 1
+redefTest() second: 2
+getTyped(int): 42
+getTyped(str): hello
+getTyped(bool): true
+getTyped(other): null
+calc(add, 10, 5): 15
+calc(sub, 10, 5): 5
+calc(mul, 10, 5): 50
+calc(div, 10, 5): 2
+calc(div, 10, 0): null
+outer(): 10
+All function tests passed!
+--- exit code: 0 ---

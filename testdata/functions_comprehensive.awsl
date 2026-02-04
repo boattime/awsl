@@ -1,0 +1,214 @@
+fn greet() {
+    print("Hello, World!");
+}
+greet();
+
+fn five() {
+    return 5;
+}
+print("five():", five());
+
+fn double(x) {
+    return x * 2;
+}
+print("double(5):", double(5));
+
+fn add(a, b) {
+    return a + b;
+}
+print("add(3, 4):", add(3, 4));
+
+fn sum3(a, b, c) {
+    return a + b + c;
+}
+print("sum3(1, 2, 3):", sum3(1, 2, 3));
+
+// Early return
+fn earlyReturn() {
+    return 1;
+    return 2;
+}
+print("earlyReturn():", earlyReturn());
+
+// Return in conditional
+fn absolute(x) {
+    if (x < 0) {
+        return -x;
+    }
+    return x;
+}
+print("absolute(5):", absolute(5));
+print("absolute(-5):", absolute(-5));
+
+// Multiple return paths
+fn grade(score) {
+    if (score >= 90) { return "A"; }
+    if (score >= 80) { return "B"; }
+    if (score >= 70) { return "C"; }
+    return "F";
+}
+print("grade(95):", grade(95));
+print("grade(75):", grade(75));
+print("grade(50):", grade(50));
+
+// Implicit null return
+fn noReturn() {
+    x = 5;
+}
+print("noReturn() == null:", noReturn() == null);
+
+outerX = 100;
+fn getOuterX() {
+    return outerX;
+}
+print("getOuterX():", getOuterX());
+
+counter = 0;
+fn increment() {
+    counter = counter + 1;
+}
+increment();
+increment();
+increment();
+print("counter after 3 increments:", counter);
+
+// Multiple functions sharing state
+total = 0;
+fn addToTotal(n) { total = total + n; }
+fn getTotal() { return total; }
+fn resetTotal() { total = 0; }
+
+addToTotal(10);
+addToTotal(20);
+print("total:", getTotal());
+resetTotal();
+print("total after reset:", getTotal());
+
+fn square(x) {
+    return x * x;
+}
+
+fn sumOfSquares(a, b) {
+    return square(a) + square(b);
+}
+print("sumOfSquares(3, 4):", sumOfSquares(3, 4));
+
+fn triple(x) {
+    return x * 3;
+}
+print("double(triple(5)):", double(triple(5)));
+
+fn sum(numbers) {
+    result = 0;
+    for (n in numbers) {
+        result = result + n;
+    }
+    return result;
+}
+print("sum([1,2,3,4,5]):", sum([1, 2, 3, 4, 5]));
+print("sum([]):", sum([]));
+
+fn countItems(items) {
+    c = 0;
+    for (item in items) {
+        c = c + 1;
+    }
+    return c;
+}
+print("countItems([1,2,3]):", countItems([1, 2, 3]));
+
+fn isInRange(n, low, high) {
+    return n >= low && n <= high;
+}
+print("isInRange(5, 1, 10):", isInRange(5, 1, 10));
+print("isInRange(15, 1, 10):", isInRange(15, 1, 10));
+
+fn canDrive(age, hasLicense) {
+    if (age >= 18 && hasLicense) {
+        return true;
+    }
+    return false;
+}
+print("canDrive(20, true):", canDrive(20, true));
+print("canDrive(20, false):", canDrive(20, false));
+print("canDrive(16, true):", canDrive(16, true));
+
+fn either(a, b) {
+    return a || b;
+}
+print("either(true, false):", either(true, false));
+print("either(false, false):", either(false, false));
+
+fn factorial(n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+print("factorial(5):", factorial(5));
+print("factorial(10):", factorial(10));
+
+fn fib(n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+print("fib(10):", fib(10));
+
+// Empty function
+fn empty() {}
+print("empty() == null:", empty() == null);
+
+// Parameter shadows outer variable
+shadowX = 999;
+fn shadowTest(shadowX) {
+    return shadowX * 2;
+}
+print("shadowX before:", shadowX);
+print("shadowTest(5):", shadowTest(5));
+print("shadowX after:", shadowX);
+
+// Function redefinition
+fn redefTest() { return 1; }
+print("redefTest() first:", redefTest());
+fn redefTest() { return 2; }
+print("redefTest() second:", redefTest());
+
+// Return different types
+fn getTyped(kind) {
+    if (kind == "int") { return 42; }
+    if (kind == "str") { return "hello"; }
+    if (kind == "bool") { return true; }
+    return null;
+}
+print("getTyped(int):", getTyped("int"));
+print("getTyped(str):", getTyped("str"));
+print("getTyped(bool):", getTyped("bool"));
+print("getTyped(other):", getTyped("other"));
+
+fn calc(op, a, b) {
+    if (op == "add") { return a + b; }
+    if (op == "sub") { return a - b; }
+    if (op == "mul") { return a * b; }
+    if (op == "div") {
+        if (b == 0) { return null; }
+        return a / b;
+    }
+    return null;
+}
+print("calc(add, 10, 5):", calc("add", 10, 5));
+print("calc(sub, 10, 5):", calc("sub", 10, 5));
+print("calc(mul, 10, 5):", calc("mul", 10, 5));
+print("calc(div, 10, 5):", calc("div", 10, 5));
+print("calc(div, 10, 0):", calc("div", 10, 0));
+
+fn outer() {
+    fn inner(x) {
+        return x * 2;
+    }
+    return inner(5);
+}
+print("outer():", outer());
+
+print("All function tests passed!");
