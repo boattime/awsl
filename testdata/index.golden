@@ -1,0 +1,66 @@
+List positive indexing:
+  nums[0]: 10
+  nums[1]: 20
+  nums[2]: 30
+  nums[3]: 40
+  nums[4]: 50
+List negative indexing:
+  nums[-1]: 50
+  nums[-2]: 40
+  nums[-3]: 30
+  nums[-4]: 20
+  nums[-5]: 10
+Inline list indexing:
+  [100, 200, 300][0]: 100
+  [100, 200, 300][2]: 300
+  [100, 200, 300][-1]: 300
+Computed index:
+  nums[idx]: 30
+  nums[1 + 1]: 30
+  nums[idx - 1]: 20
+Mixed type list:
+  mixed[0] (int): 42
+  mixed[1] (string): hello
+  mixed[2] (bool): true
+  mixed[3] (null): null
+  mixed[4] (float): 3.14
+Nested list (matrix) indexing:
+  matrix[0][0]: 1
+  matrix[0][2]: 3
+  matrix[1][1]: 5
+  matrix[2][2]: 9
+  matrix[-1][-1]: 9
+List index in expressions:
+  values[0] + values[1]: 30
+  values[0] * values[2]: 300
+  values[-1] - values[0]: 20
+String positive indexing:
+  str[0]: h
+  str[1]: e
+  str[2]: l
+  str[3]: l
+  str[4]: o
+String negative indexing:
+  str[-1]: o
+  str[-2]: l
+  str[-3]: l
+  str[-4]: e
+  str[-5]: h
+Computed string index:
+  word[idx]: d
+  word[idx - 2]: b
+  word[1 + 1]: c
+String index in expressions:
+  greeting[0] + greeting[1]: Hi
+Built from indices (A, E, I): AEI
+Basic hash indexing:
+  person[name]: Alice
+  person[age]: 30
+  person[active]: true
+Hash with various types:
+  data[str]: hello
+  data[num]: 42
+  data[float]: 3.14
+  data[bool]: false
+  data[nothing]: null
+--- exit code: 0 ---

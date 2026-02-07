@@ -2,7 +2,9 @@
 package eval
 
 import (
+	"fmt"
 	"io"
+	"strings"
 )
 
 // Environment stores variable bindings for the current scope.
@@ -88,4 +90,20 @@ func (e *Environment) Stdout() io.Writer {
 		return e.stdout
 	}
 	return nil
+}
+
+// Debug prints the environment chain from global (least indented) to current (most indented).
+func (e *Environment) Debug(depth *int) {
+	if e.outer != nil {
+		e.outer.Debug(depth)
+	}
+
+	indent := strings.Repeat("  ", *depth)
+	fmt.Printf("%sEnv (%p):\n", indent, e)
+	for k, v := range e.store {
+		fmt.Printf("%s  %s: %s\n", indent, k, v.Inspect())
+	}
+	fmt.Println()
+
+	*depth++
 }

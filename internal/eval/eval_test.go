@@ -939,3 +939,413 @@ func TestReturnStatements(t *testing.T) {
 		})
 	}
 }
+
+func TestObjectLiteralEmpty(t *testing.T) {
+	evaluated := testEval("{};")
+	hash, ok := evaluated.(*Hash)
+	if !ok {
+		t.Fatalf("expected *Hash, got %T", evaluated)
+	}
+	if len(hash.Pairs) != 0 {
+		t.Errorf("expected 0 pairs, got %d", len(hash.Pairs))
+	}
+}
+
+func TestObjectLiteralBasic(t *testing.T) {
+	evaluated := testEval(`{name: "Alice", age: 30};`)
+	hash, ok := evaluated.(*Hash)
+	if !ok {
+		t.Fatalf("expected *Hash, got %T", evaluated)
+	}
+	if len(hash.Pairs) != 2 {
+		t.Fatalf("expected 2 pairs, got %d", len(hash.Pairs))
+	}
+
+	nameVal, ok := hash.Get("name")
+	if !ok {
+		t.Fatal("expected 'name' key to exist")
+	}
+	testStringObject(t, nameVal, "Alice")
+
+	ageVal, ok := hash.Get("age")
+	if !ok {
+		t.Fatal("expected 'age' key to exist")
+	}
+	testIntegerObject(t, ageVal, 30)
+}
+
+func TestObjectLiteralMixedTypes(t *testing.T) {
+	evaluated := testEval(`{
+		str: "hello",
+		num: 42,
+		float: 3.14,
+		bool: true,
+		nothing: null
+	};`)
+	hash, ok := evaluated.(*Hash)
+	if !ok {
+		t.Fatalf("expected *Hash, got %T", evaluated)
+	}
+	if len(hash.Pairs) != 5 {
+		t.Fatalf("expected 5 pairs, got %d", len(hash.Pairs))
+	}
+
+	testStringObject(t, hash.Pairs["str"], "hello")
+	testIntegerObject(t, hash.Pairs["num"], 42)
+	testFloatObject(t, hash.Pairs["float"], 3.14)
+	testBooleanObject(t, hash.Pairs["bool"], true)
+	testNullObject(t, hash.Pairs["nothing"])
+}
+
+func TestObjectLiteralWithExpressions(t *testing.T) {
+	evaluated := testEval(`{
+		sum: 5 + 5,
+		product: 3 * 4,
+		concat: "hello" + " world"
+	};`)
+	hash, ok := evaluated.(*Hash)
+	if !ok {
+		t.Fatalf("expected *Hash, got %T", evaluated)
+	}
+
+	testIntegerObject(t, hash.Pairs["sum"], 10)
+	testIntegerObject(t, hash.Pairs["product"], 12)
+	testStringObject(t, hash.Pairs["concat"], "hello world")
+}
+
+func TestObjectLiteralWithVariables(t *testing.T) {
+	input := `
+		x = 10;
+		y = "test";
+		{a: x, b: y};
+	`
+	evaluated := testEval(input)
+	hash, ok := evaluated.(*Hash)
+	if !ok {
+		t.Fatalf("expected *Hash, got %T", evaluated)
+	}
+
+	testIntegerObject(t, hash.Pairs["a"], 10)
+	testStringObject(t, hash.Pairs["b"], "test")
+}
+
+func TestObjectLiteralNested(t *testing.T) {
+	evaluated := testEval(`{
+		outer: {
+			inner: 42
+		}
+	};`)
+	hash, ok := evaluated.(*Hash)
+	if !ok {
+		t.Fatalf("expected *Hash, got %T", evaluated)
+	}
+
+	outerVal, ok := hash.Get("outer")
+	if !ok {
+		t.Fatal("expected 'outer' key to exist")
+	}
+
+	innerHash, ok := outerVal.(*Hash)
+	if !ok {
+		t.Fatalf("expected *Hash, got %T", outerVal)
+	}
+
+	innerVal, ok := innerHash.Get("inner")
+	if !ok {
+		t.Fatal("expected 'inner' key to exist")
+	}
+	testIntegerObject(t, innerVal, 42)
+}
+
+func TestObjectLiteralWithList(t *testing.T) {
+	evaluated := testEval(`{items: [1, 2, 3]};`)
+	hash, ok := evaluated.(*Hash)
+	if !ok {
+		t.Fatalf("expected *Hash, got %T", evaluated)
+	}
+
+	itemsVal, ok := hash.Get("items")
+	if !ok {
+		t.Fatal("expected 'items' key to exist")
+	}
+
+	list, ok := itemsVal.(*List)
+	if !ok {
+		t.Fatalf("expected *List, got %T", itemsVal)
+	}
+
+	if len(list.Elements) != 3 {
+		t.Fatalf("expected 3 elements, got %d", len(list.Elements))
+	}
+}
+
+func TestObjectLiteralValueError(t *testing.T) {
+	evaluated := testEval(`{key: undefined_var};`)
+	testErrorObject(t, evaluated, "undefined variable: undefined_var")
+}
+
+func TestObjectLiteralAssignment(t *testing.T) {
+	input := `
+		obj = {name: "test", value: 100};
+		obj;
+	`
+	evaluated := testEval(input)
+	hash, ok := evaluated.(*Hash)
+	if !ok {
+		t.Fatalf("expected *Hash, got %T", evaluated)
+	}
+
+	testStringObject(t, hash.Pairs["name"], "test")
+	testIntegerObject(t, hash.Pairs["value"], 100)
+}
+
+func TestListIndexExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"[1, 2, 3][0];", 1},
+		{"[1, 2, 3][1];", 2},
+		{"[1, 2, 3][2];", 3},
+		{"x = [10, 20, 30]; x[0];", 10},
+		{"x = [10, 20, 30]; x[1];", 20},
+		{"x = [10, 20, 30]; x[2];", 30},
+		{"[1, 2, 3][1 + 1];", 3},
+		{"x = 0; [10, 20, 30][x];", 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testIntegerObject(t, evaluated, tt.expected)
+		})
+	}
+}
+
+func TestListNegativeIndexExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"[1, 2, 3][-1];", 3},
+		{"[1, 2, 3][-2];", 2},
+		{"[1, 2, 3][-3];", 1},
+		{"[10, 20, 30, 40, 50][-1];", 50},
+		{"[10, 20, 30, 40, 50][-5];", 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testIntegerObject(t, evaluated, tt.expected)
+		})
+	}
+}
+
+func TestListIndexOutOfBounds(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedMessage string
+	}{
+		{"[1, 2, 3][3];", "index out of bounds: 3 (length: 3)"},
+		{"[1, 2, 3][10];", "index out of bounds: 10 (length: 3)"},
+		{"[1, 2, 3][-4];", "index out of bounds: -4 (length: 3)"},
+		{"[][0];", "index out of bounds: 0 (length: 0)"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testErrorObject(t, evaluated, tt.expectedMessage)
+		})
+	}
+}
+
+func TestListIndexMixedTypes(t *testing.T) {
+	input := `[1, "hello", true, null][1];`
+	evaluated := testEval(input)
+	testStringObject(t, evaluated, "hello")
+}
+
+func TestListIndexReturnsBoolean(t *testing.T) {
+	evaluated := testEval(`[true, false][0];`)
+	testBooleanObject(t, evaluated, true)
+}
+
+func TestListIndexReturnsNull(t *testing.T) {
+	evaluated := testEval(`[null][0];`)
+	testNullObject(t, evaluated)
+}
+
+func TestStringIndexExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{`"hello"[0];`, "h"},
+		{`"hello"[1];`, "e"},
+		{`"hello"[4];`, "o"},
+		{`s = "world"; s[0];`, "w"},
+		{`s = "test"; s[2];`, "s"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testStringObject(t, evaluated, tt.expected)
+		})
+	}
+}
+
+func TestStringNegativeIndexExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{`"hello"[-1];`, "o"},
+		{`"hello"[-2];`, "l"},
+		{`"hello"[-5];`, "h"},
+		{`"abc"[-1];`, "c"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testStringObject(t, evaluated, tt.expected)
+		})
+	}
+}
+
+func TestStringIndexOutOfBounds(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedMessage string
+	}{
+		{`"hello"[5];`, "index out of bounds: 5 (length: 5)"},
+		{`"hello"[100];`, "index out of bounds: 100 (length: 5)"},
+		{`"hello"[-6];`, "index out of bounds: -6 (length: 5)"},
+		{`""[0];`, "index out of bounds: 0 (length: 0)"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testErrorObject(t, evaluated, tt.expectedMessage)
+		})
+	}
+}
+
+func TestHashIndexExpression(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected any
+	}{
+		{
+			name:     "string value",
+			input:    `{name: "Alice"}["name"];`,
+			expected: "Alice",
+		},
+		{
+			name:     "integer value",
+			input:    `{age: 30}["age"];`,
+			expected: int64(30),
+		},
+		{
+			name:     "boolean value",
+			input:    `{active: true}["active"];`,
+			expected: true,
+		},
+		{
+			name:     "with variable",
+			input:    `obj = {key: "value"}; obj["key"];`,
+			expected: "value",
+		},
+		{
+			name:     "nested access",
+			input:    `{outer: {inner: 42}}["outer"];`,
+			expected: "hash", // special case - check it's a hash
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			switch expected := tt.expected.(type) {
+			case string:
+				if expected == "hash" {
+					if _, ok := evaluated.(*Hash); !ok {
+						t.Errorf("expected *Hash, got %T", evaluated)
+					}
+				} else {
+					testStringObject(t, evaluated, expected)
+				}
+			case int64:
+				testIntegerObject(t, evaluated, expected)
+			case bool:
+				testBooleanObject(t, evaluated, expected)
+			}
+		})
+	}
+}
+
+func TestHashIndexMissingKey(t *testing.T) {
+	tests := []string{
+		`{}["missing"];`,
+		`{name: "Alice"}["age"];`,
+		`{a: 1, b: 2}["c"];`,
+	}
+
+	for _, input := range tests {
+		t.Run(input, func(t *testing.T) {
+			evaluated := testEval(input)
+			testNullObject(t, evaluated)
+		})
+	}
+}
+
+func TestHashIndexWithStringVariable(t *testing.T) {
+	input := `
+		obj = {name: "test"};
+		key = "name";
+		obj[key];
+	`
+	evaluated := testEval(input)
+	testStringObject(t, evaluated, "test")
+}
+
+func TestHashNestedIndexAccess(t *testing.T) {
+	input := `{outer: {inner: 42}}["outer"]["inner"];`
+	evaluated := testEval(input)
+	testIntegerObject(t, evaluated, 42)
+}
+
+func TestIndexExpressionTypeErrors(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedMessage string
+	}{
+		{`[1, 2, 3]["string"];`, "index operator not supported: LIST[STRING]"},
+		{`"hello"["string"];`, "index operator not supported: STRING[STRING]"},
+		{`{key: "value"}[0];`, "index operator not supported: HASH[INTEGER]"},
+		{`42[0];`, "index operator not supported: INTEGER[INTEGER]"},
+		{`true[0];`, "index operator not supported: BOOLEAN[INTEGER]"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testErrorObject(t, evaluated, tt.expectedMessage)
+		})
+	}
+}
+
+func TestIndexExpressionLeftError(t *testing.T) {
+	evaluated := testEval("undefined_list[0];")
+	testErrorObject(t, evaluated, "undefined variable: undefined_list")
+}
+
+func TestIndexExpressionIndexError(t *testing.T) {
+	evaluated := testEval("[1, 2, 3][undefined_index];")
+	testErrorObject(t, evaluated, "undefined variable: undefined_index")
+}

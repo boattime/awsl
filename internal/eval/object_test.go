@@ -248,6 +248,7 @@ func TestObjectInterface(t *testing.T) {
 		&Null{},
 		&Error{Message: "test", Line: 1, Column: 1},
 		&List{Elements: []Object{&Integer{Value: 1}}},
+		&Hash{Pairs: map[string]Object{"test": &String{Value: "hello"}}},
 		TRUE,
 		FALSE,
 		NULL,
@@ -369,5 +370,155 @@ func TestReturnValueObject(t *testing.T) {
 				t.Errorf("ReturnValue.Inspect() = %q, want %q", obj.Inspect(), tt.expectedInspect)
 			}
 		})
+	}
+}
+
+func TestHashObject(t *testing.T) {
+	tests := []struct {
+		name            string
+		pairs           map[string]Object
+		expectedType    ObjectType
+		expectedInspect []string
+	}{
+		{
+			name:            "empty hash",
+			pairs:           map[string]Object{},
+			expectedType:    HASH_OBJ,
+			expectedInspect: []string{"{}"},
+		},
+		{
+			name: "single pair",
+			pairs: map[string]Object{
+				"name": &String{Value: "Alice"},
+			},
+			expectedType:    HASH_OBJ,
+			expectedInspect: []string{"{name: Alice}"},
+		},
+		{
+			name: "multiple pairs",
+			pairs: map[string]Object{
+				"a": &Integer{Value: 1},
+				"b": &Integer{Value: 2},
+			},
+			expectedType:    HASH_OBJ,
+			expectedInspect: []string{"{a: 1, b: 2}", "{b: 2, a: 1}"},
+		},
+		{
+			name: "mixed value types",
+			pairs: map[string]Object{
+				"int":   &Integer{Value: 42},
+				"str":   &String{Value: "hello"},
+				"bool":  TRUE,
+				"float": &Float{Value: 3.14},
+			},
+			expectedType:    HASH_OBJ,
+			expectedInspect: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			obj := &Hash{Pairs: tt.pairs}
+
+			if obj.Type() != tt.expectedType {
+				t.Errorf("Hash.Type() = %q, want %q", obj.Type(), tt.expectedType)
+			}
+
+			if tt.expectedInspect != nil {
+				inspect := obj.Inspect()
+				found := false
+				for _, expected := range tt.expectedInspect {
+					if inspect == expected {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("Hash.Inspect() = %q, want one of %v", inspect, tt.expectedInspect)
+				}
+			}
+		})
+	}
+}
+
+func TestHashGet(t *testing.T) {
+	hash := &Hash{
+		Pairs: map[string]Object{
+			"name":   &String{Value: "Alice"},
+			"age":    &Integer{Value: 30},
+			"active": TRUE,
+		},
+	}
+
+	tests := []struct {
+		key         string
+		expectedOk  bool
+		expectedVal string
+	}{
+		{"name", true, "Alice"},
+		{"age", true, "30"},
+		{"active", true, "true"},
+		{"missing", false, ""},
+		{"", false, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.key, func(t *testing.T) {
+			val, ok := hash.Get(tt.key)
+
+			if ok != tt.expectedOk {
+				t.Errorf("Hash.Get(%q) ok = %t, want %t", tt.key, ok, tt.expectedOk)
+			}
+
+			if ok && val.Inspect() != tt.expectedVal {
+				t.Errorf("Hash.Get(%q) = %q, want %q", tt.key, val.Inspect(), tt.expectedVal)
+			}
+		})
+	}
+}
+
+func TestHashWithNestedObjects(t *testing.T) {
+	nested := &Hash{
+		Pairs: map[string]Object{
+			"list": &List{Elements: []Object{
+				&Integer{Value: 1},
+				&Integer{Value: 2},
+			}},
+			"hash": &Hash{Pairs: map[string]Object{
+				"inner": &String{Value: "value"},
+			}},
+		},
+	}
+
+	if nested.Type() != HASH_OBJ {
+		t.Errorf("Hash.Type() = %q, want %q", nested.Type(), HASH_OBJ)
+	}
+
+	listVal, ok := nested.Get("list")
+	if !ok {
+		t.Fatal("expected 'list' key to exist")
+	}
+	list, ok := listVal.(*List)
+	if !ok {
+		t.Fatalf("expected *List, got %T", listVal)
+	}
+	if len(list.Elements) != 2 {
+		t.Errorf("expected 2 elements, got %d", len(list.Elements))
+	}
+
+	hashVal, ok := nested.Get("hash")
+	if !ok {
+		t.Fatal("expected 'hash' key to exist")
+	}
+	innerHash, ok := hashVal.(*Hash)
+	if !ok {
+		t.Fatalf("expected *Hash, got %T", hashVal)
+	}
+	innerVal, ok := innerHash.Get("inner")
+	if !ok {
+		t.Fatal("expected 'inner' key to exist")
+	}
+	if innerVal.Inspect() != "value" {
+		t.Errorf("inner value = %q, want %q", innerVal.Inspect(), "value")
 	}
 }

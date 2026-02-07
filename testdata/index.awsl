@@ -1,0 +1,111 @@
+// Basic positive indexing
+nums = [10, 20, 30, 40, 50];
+print("List positive indexing:");
+print("  nums[0]:", nums[0]);
+print("  nums[1]:", nums[1]);
+print("  nums[2]:", nums[2]);
+print("  nums[3]:", nums[3]);
+print("  nums[4]:", nums[4]);
+
+// Negative indexing (Python-style)
+print("List negative indexing:");
+print("  nums[-1]:", nums[-1]);
+print("  nums[-2]:", nums[-2]);
+print("  nums[-3]:", nums[-3]);
+print("  nums[-4]:", nums[-4]);
+print("  nums[-5]:", nums[-5]);
+
+// Inline list indexing
+print("Inline list indexing:");
+print("  [100, 200, 300][0]:", [100, 200, 300][0]);
+print("  [100, 200, 300][2]:", [100, 200, 300][2]);
+print("  [100, 200, 300][-1]:", [100, 200, 300][-1]);
+
+// Computed index
+print("Computed index:");
+idx = 2;
+print("  nums[idx]:", nums[idx]);
+print("  nums[1 + 1]:", nums[1 + 1]);
+print("  nums[idx - 1]:", nums[idx - 1]);
+
+// Mixed type list indexing
+mixed = [42, "hello", true, null, 3.14];
+print("Mixed type list:");
+print("  mixed[0] (int):", mixed[0]);
+print("  mixed[1] (string):", mixed[1]);
+print("  mixed[2] (bool):", mixed[2]);
+print("  mixed[3] (null):", mixed[3]);
+print("  mixed[4] (float):", mixed[4]);
+
+// Nested list indexing
+matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+print("Nested list (matrix) indexing:");
+print("  matrix[0][0]:", matrix[0][0]);
+print("  matrix[0][2]:", matrix[0][2]);
+print("  matrix[1][1]:", matrix[1][1]);
+print("  matrix[2][2]:", matrix[2][2]);
+print("  matrix[-1][-1]:", matrix[-1][-1]);
+
+// List indexing in expressions
+values = [10, 20, 30];
+print("List index in expressions:");
+print("  values[0] + values[1]:", values[0] + values[1]);
+print("  values[0] * values[2]:", values[0] * values[2]);
+print("  values[-1] - values[0]:", values[-1] - values[0]);
+
+// Basic string positive indexing
+str = "hello";
+print("String positive indexing:");
+print("  str[0]:", str[0]);
+print("  str[1]:", str[1]);
+print("  str[2]:", str[2]);
+print("  str[3]:", str[3]);
+print("  str[4]:", str[4]);
+
+// String negative indexing
+print("String negative indexing:");
+print("  str[-1]:", str[-1]);
+print("  str[-2]:", str[-2]);
+print("  str[-3]:", str[-3]);
+print("  str[-4]:", str[-4]);
+print("  str[-5]:", str[-5]);
+
+// Computed string index
+print("Computed string index:");
+word = "abcdef";
+idx = 3;
+print("  word[idx]:", word[idx]);
+print("  word[idx - 2]:", word[idx - 2]);
+print("  word[1 + 1]:", word[1 + 1]);
+
+// String indexing in expressions
+print("String index in expressions:");
+greeting = "Hi";
+print("  greeting[0] + greeting[1]:", greeting[0] + greeting[1]);
+
+// Build string using indices
+source = "ABCDEFGHIJ";
+result = source[0] + source[4] + source[8];
+print("Built from indices (A, E, I):", result);
+
+// Basic hash indexing
+person = {name: "Alice", age: 30, active: true};
+print("Basic hash indexing:");
+print("  person[name]:", person["name"]);
+print("  person[age]:", person["age"]);
+print("  person[active]:", person["active"]);
+
+// Hash with various value types
+data = {
+    str: "hello",
+    num: 42,
+    float: 3.14,
+    bool: false,
+    nothing: null
+};
+print("Hash with various types:");
+print("  data[str]:", data["str"]);
+print("  data[num]:", data["num"]);
+print("  data[float]:", data["float"]);
+print("  data[bool]:", data["bool"]);
+print("  data[nothing]:", data["nothing"]);

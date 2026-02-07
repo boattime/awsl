@@ -24,6 +24,7 @@ const (
 	LIST_OBJ         = "LIST"
 	FUNCTION_OBJ     = "FUNCTION"
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
+	HASH_OBJ         = "HASH"
 )
 
 // Object is the interface that all runtime values implement.
@@ -183,3 +184,41 @@ func (rv *ReturnValue) Type() ObjectType { return RETURN_VALUE_OBJ }
 
 // Inspect returns the wrapped value's representation.
 func (rv *ReturnValue) Inspect() string { return rv.Value.Inspect() }
+
+// HashPair represents a key-value pair in a hash.
+type HashPair struct {
+	Key   string
+	Value Object
+}
+
+// Hash represents an object/map with string keys.
+type Hash struct {
+	Pairs map[string]Object
+}
+
+// Type returns HASH_OBJ.
+func (h *Hash) Type() ObjectType { return HASH_OBJ }
+
+// Inspect returns the hash as a string.
+func (h *Hash) Inspect() string {
+	var out strings.Builder
+	out.WriteString("{")
+	i := 0
+	for k, v := range h.Pairs {
+		if i > 0 {
+			out.WriteString(", ")
+		}
+		out.WriteString(k)
+		out.WriteString(": ")
+		out.WriteString(v.Inspect())
+		i++
+	}
+	out.WriteString("}")
+	return out.String()
+}
+
+// Get retrieves a value from the hash by key.
+func (h *Hash) Get(key string) (Object, bool) {
+	val, ok := h.Pairs[key]
+	return val, ok
+}

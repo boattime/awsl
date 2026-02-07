@@ -43,6 +43,8 @@ func Eval(node ast.Node, env *Environment) Object {
 		return NULL
 	case *ast.ListLiteral:
 		return evalListLiteral(node, env)
+	case *ast.ObjectLiteral:
+		return evalObjectLiteral(node, env)
 
 	// Expressions
 	case *ast.Identifier:
@@ -55,6 +57,8 @@ func Eval(node ast.Node, env *Environment) Object {
 		return evalInfixExpression(node, env)
 	case *ast.GroupedExpression:
 		return Eval(node.Expression, env)
+	case *ast.IndexExpression:
+		return evalIndexExpression(node, env)
 	}
 
 	pos := node.Pos()
@@ -418,6 +422,88 @@ func evalStringInfixExpression(op token.TokenType, left, right Object, pos ast.P
 	}
 }
 
+// evalIndexExpression evaluates index access expressions.
+// Supports: list[int], string[int]
+func evalIndexExpression(node *ast.IndexExpression, env *Environment) Object {
+	left := Eval(node.Left, env)
+	if isError(left) {
+		return left
+	}
+
+	index := Eval(node.Index, env)
+	if isError(index) {
+		return index
+	}
+
+	pos := node.Pos()
+
+	switch {
+	case left.Type() == LIST_OBJ && index.Type() == INTEGER_OBJ:
+		return evalListIndexExpression(left, index, pos)
+	case left.Type() == STRING_OBJ && index.Type() == INTEGER_OBJ:
+		return evalStringIndexExpression(left, index, pos)
+	case left.Type() == HASH_OBJ && index.Type() == STRING_OBJ:
+		return evalHashIndexExpression(left, index)
+	default:
+		return newError(pos.Line, pos.Column, "index operator not supported: %s[%s]", left.Type(), index.Type())
+	}
+}
+
+// evalStringIndexExpression evaluates string index access.
+// Returns a single-character string at the given index.
+// Supports negative indexing: str[-1] returns the last character.
+func evalStringIndexExpression(left, index Object, pos ast.Position) Object {
+	str := left.(*String).Value
+	idx := index.(*Integer).Value
+	length := int64(len(str))
+
+	// Handle negative indexing
+	if idx < 0 {
+		idx = length + idx
+	}
+
+	// Bounds check
+	if idx < 0 || idx >= length {
+		return newError(pos.Line, pos.Column, "index out of bounds: %d (length: %d)", index.(*Integer).Value, length)
+	}
+
+	return &String{Value: string(str[idx])}
+}
+
+// evalListIndexExpression evaluates list index access.
+// Supports negative indexing: list[-1] returns the last element.
+func evalListIndexExpression(left, index Object, pos ast.Position) Object {
+	list := left.(*List)
+	idx := index.(*Integer).Value
+	length := int64(len(list.Elements))
+
+	// Handle negative indexing
+	if idx < 0 {
+		idx = length + idx
+	}
+
+	// Bounds check
+	if idx < 0 || idx >= length {
+		return newError(pos.Line, pos.Column, "index out of bounds: %d (length: %d)", index.(*Integer).Value, length)
+	}
+
+	return list.Elements[idx]
+}
+
+// evalHashIndexExpression evaluates hash index access.
+// Returns NULL if the key doesn't exist (rather than an error).
+func evalHashIndexExpression(left, index Object) Object {
+	hash := left.(*Hash)
+	key := index.(*String).Value
+
+	val, ok := hash.Get(key)
+	if !ok {
+		return NULL
+	}
+
+	return val
+}
+
 // nativeBoolToBooleanObject converts a Go bool to the appropriate singleton.
 func nativeBoolToBooleanObject(value bool) *Boolean {
 	if value {
@@ -439,6 +525,24 @@ func evalListLiteral(node *ast.ListLiteral, env *Environment) Object {
 	}
 
 	return &List{Elements: elements}
+}
+
+// evalObjectLiteral evaluates an object literal.
+func evalObjectLiteral(node *ast.ObjectLiteral, env *Environment) Object {
+	pairs := make(map[string]Object)
+
+	for _, pair := range node.Pairs {
+		key := pair.Key.Value
+
+		value := Eval(pair.Value, env)
+		if isError(value) {
+			return value
+		}
+
+		pairs[key] = value
+	}
+
+	return &Hash{Pairs: pairs}
 }
 
 // newError creates a new Error object with position information.

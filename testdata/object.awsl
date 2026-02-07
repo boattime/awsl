@@ -4,3 +4,8 @@ user = {
     name: "Alice",
     active: true
 };
+
+print(user["pk"]);
+print(user["sk"]);
+print(user["name"]);
+print(user["active"]);
